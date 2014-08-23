@@ -25,6 +25,32 @@ def get_root(_):
     return '1'
 
 
+def _remove_local_cycles(instances):
+    """
+    Filter instances of the form `(source, target, prob, rel)`
+    so that every pair of nodes is represented by only one instance,
+    the one with the highest probability.
+
+    If we have some `(foo, bar, p1, r1)` and `(bar, foo, p2, r2)`,
+    we only take one of the two.
+
+    The intended use is to remove local cycles from the instance
+    graph before feeding them to the Chu-Liu/Edmonds algorithm
+    """
+    buckets = defaultdict(list)
+    for instance in instances:
+        src = instance[0].id
+        tgt = instance[1].id
+        key = (min(src, tgt), max(src, tgt))
+        buckets[key].append(instance)
+
+    def max_by_prob(instances):
+        "the best instance by its probability"
+        return max(instances, key=lambda x: x[2])
+
+    return list(map(max_by_prob, buckets.values()))
+
+
 def _graph(instances, root='1', use_prob=True):
     """ instances are quadruplets of the form:
 
@@ -40,7 +66,7 @@ def _graph(instances, root='1', use_prob=True):
     labels = dict()
     scores = dict()
 
-    for source, target, prob, rel in instances:
+    for source, target, prob, rel in _remove_local_cycles(instances):
         src = source.id
         tgt = target.id
         if tgt == root:
