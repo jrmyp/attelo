@@ -13,16 +13,17 @@ import sys
 from depparse.graph import Digraph
 
 
-def get_root(_):
+
+def get_root(edus):
     """ This is used for the construction of the graph. Since we are
     using the Chu-Liu Edmonds algorithm in it's dependency parsing
     incarnation, there should be a node that is the root, i.e.  a node
     that has no incoming edges. This function is supposed to return
-    that node. For the moment it always returns the first
-    node. Syntactic analysis should be sufficient to provide the real
-    head node.
+    that node. For the moment it always returns (the ID of the)
+    textually first node. Syntactic analysis should be sufficient to
+    provide the real head node.
     """
-    return '1'
+    return min(edus, key=lambda e: e.start).id
 
 
 def _remove_local_cycles(instances):
@@ -51,7 +52,7 @@ def _remove_local_cycles(instances):
     return list(map(max_by_prob, buckets.values()))
 
 
-def _graph(instances, root='1', use_prob=True):
+def _graph(instances, root=None, use_prob=True):
     """ instances are quadruplets of the form:
 
             source, target, probability_of_attachment, relation
@@ -66,7 +67,10 @@ def _graph(instances, root='1', use_prob=True):
     labels = dict()
     scores = dict()
 
-    for source, target, prob, rel in _remove_local_cycles(instances):
+    if root is None:
+        root = get_root(i[0] for i in instances)
+
+    for source, target, prob, rel in instances:
         src = source.id
         tgt = target.id
         if tgt == root:
@@ -82,7 +86,7 @@ def _graph(instances, root='1', use_prob=True):
                    lambda s, t: labels[s, t]).mst()
 
 
-def _list_edges(instances, root='1', use_prob=True):
+def _list_edges(instances, root=None, use_prob=True):
     """ instances are quadruplets of the form:
 
             source, target, probability_of_attachment, relation
