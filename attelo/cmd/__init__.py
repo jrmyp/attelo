@@ -10,6 +10,7 @@ from . import\
     enfold,\
     evaluate,\
     learn,\
-    report
+    report,\
+    show_probs
 
-SUBCOMMANDS = [learn, decode, enfold, evaluate, report]
+SUBCOMMANDS = [learn, decode, enfold, evaluate, report, show_probs]
